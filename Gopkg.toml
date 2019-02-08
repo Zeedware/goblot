@@ -40,3 +40,7 @@
 #[[constraint]]
 #  branch = "master"
 #  name = "google.golang.org/api"
+
+[[constraint]]
+  name = "github.com/imroc/req"
+  version = "0.2.3"

@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
-	"runtime/debug"
-	"strings"
 )
 
 type Bot struct {
@@ -32,33 +29,26 @@ func (chatBot *Bot) InitConfig() {
 		log.Fatalf("Telegram token are not set in config.toml")
 	}
 
-	chatBot.Searcher = NewImageSearcher(viper.GetString("telegram.f"))
+	//chatBot.Searcher = NewImageSearcher(viper.GetString("telegram.f"))
 }
 
-func (chatBot *Bot) Start() {
+func (bot *Bot) Start() {
+
+	tBot := bot.TelegramBot
+	log.Printf("Authorized on account %s", tBot.Self.UserName)
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-	bot := chatBot.TelegramBot
-	bot.GetChatMember(tgbotapi.ChatConfigWithUser{})
-	updates, err := bot.GetUpdatesChan(u)
+	tBot.GetChatMember(tgbotapi.ChatConfigWithUser{})
+	updates, err := tBot.GetUpdatesChan(u)
 	if err != nil {
-		debug.PrintStack()
-		return
+		panic(err)
 	}
 	for update := range updates {
 		if update.Message == nil {
 			continue
 		}
 
-		processUpdate(update)
-
-		if strings.HasPrefix(update.Message.Text, "gbr") {
-
-		}
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprint(update.Message.From.UserName, " bilang: ", update.Message.Text))
-		msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
+		bot.ProcessUpdate(update)
 	}
 }

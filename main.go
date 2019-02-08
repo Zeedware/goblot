@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/spf13/viper"
 	"log"
-	"strings"
 )
 
 func main() {
@@ -23,32 +21,16 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	imageSearchConfig := NewImageSearchConfig().
+		SetUrl(viper.GetString("contexttualwebsearch.url")).
+		SetKey(viper.GetString("contexttualwebsearch.key"))
+	imageSearcher := NewImageSearcher()
+	imageSearcher.setConfig(imageSearchConfig)
 
 	bot.Debug = true
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	bot.GetChatMember(tgbotapi.ChatConfigWithUser{})
-	updates, err := bot.GetUpdatesChan(u)
-
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-
-		processUpdate(update)
-
-		if strings.HasPrefix(update.Message.Text, "gbr") {
-
-		}
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprint(update.Message.From.UserName, " bilang: ", update.Message.Text))
-		msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
-	}
+	chatBot := NewBot(bot, imageSearcher)
+	chatBot.Start()
 
 }
 

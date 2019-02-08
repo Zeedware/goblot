@@ -1,8 +1,7 @@
 package main
 
 import (
-	"net/http"
-	"runtime/debug"
+	"github.com/imroc/req"
 )
 
 type Searcher interface {
@@ -20,43 +19,74 @@ func (imageSearcher *ImageSearcher) setConfig(config SearchConfig) {
 	imageSearcher.Config = config
 }
 
-func (imageSearcher *ImageSearcher) SearchImage() string {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", imageSearcher.Config.GetUrl(), nil)
-	if err != nil {
-		debug.PrintStack()
-	}
-	req.Header.Set("X-RapidAPI-Key", imageSearcher.Config.GetKey())
-	client.Do(req)
+func (imageSearcher *ImageSearcher) GetImage(query string) {
+	SearchImage()
+}
 
-	return ""
+func (imageSearcher *ImageSearcher) SearchImage(query string) (string, error) {
+	header := req.Header{
+		"X-RapidAPI-key": imageSearcher.Config.Key(),
+	}
+	param := req.Param{
+		"autoCorrect": "false",
+		"pageNumber":  "1",
+		"pageSize":    "1",
+		"safeSearch":  "false",
+		"q":           query,
+	}
+
+	res, err := req.New().Get(imageSearcher.Config.Url(), header, param)
+	if err != nil {
+		return "", err
+	}
+	var x ImageSearchResponse
+
+	res.ToJSON(&x)
+
+	if len(x.Value) < 1 {
+		return "", NoSearchResultError
+	}
+
+	return x.Value[0].URL, nil
+}
+
+func DownloadImage(url string) ([]byte, error) {
+	res, err := req.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	return res.Bytes(), nil
 }
 
 type SearchConfig interface {
-	GetUrl() string
-	GetKey() string
+	Url() string
+	Key() string
 }
 
 type ImageSearchConfig struct {
-	Url string
-	Key string
+	url string
+	key string
 }
 
-func (imageSearchConfig ImageSearchConfig) GetUrl() string {
-	return imageSearchConfig.Url
+func NewImageSearchConfig() *ImageSearchConfig {
+	return &ImageSearchConfig{}
 }
 
-func (imageSearchConfig ImageSearchConfig) GetKey() string {
-	return imageSearchConfig.Key
+func (imageSearchConfig ImageSearchConfig) Url() string {
+	return imageSearchConfig.url
+}
+
+func (imageSearchConfig ImageSearchConfig) Key() string {
+	return imageSearchConfig.key
 }
 
 func (imageSearchConfig ImageSearchConfig) SetKey(newKey string) ImageSearchConfig {
-	imageSearchConfig.Key = newKey
+	imageSearchConfig.key = newKey
 	return imageSearchConfig
 }
 
 func (imageSearchConfig ImageSearchConfig) SetUrl(newUrl string) ImageSearchConfig {
-	imageSearchConfig.Url = newUrl
+	imageSearchConfig.url = newUrl
 	return imageSearchConfig
 }
 

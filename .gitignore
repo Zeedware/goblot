@@ -22,6 +22,8 @@ _testmain.go
 
 config.toml
 
+!SampleResouces/config.toml
+
 /VERSION.cache
 /bin/
 /build.out
