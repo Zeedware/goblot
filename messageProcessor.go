@@ -13,7 +13,7 @@ func (bot *Bot) ProcessUpdate(update tgbotapi.Update) {
 func (bot *Bot) ProcessMessage(message *tgbotapi.Message) {
 	switch SubstringFirstWord(message.Text) {
 	case "gbr":
-		if strings.Contains(strings.ToLower(message.Text), "kharriz") {
+		if strings.Contains(strings.ToLower(message.Text), "kharriz") || strings.Contains(strings.ToLower(message.Text), "imsol") {
 			bot.SendKont(message)
 		} else {
 			log.Println("gbr start")

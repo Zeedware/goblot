@@ -27,7 +27,7 @@ func main() {
 	imageSearcher := NewImageSearcher()
 	imageSearcher.setConfig(imageSearchConfig)
 
-	bot.Debug = true
+	bot.Debug = false
 
 	chatBot := NewBot(bot, imageSearcher)
 	chatBot.Start()

@@ -24,6 +24,32 @@ func (imageSearcher *ImageSearcher) GetImage(query string) {
 }
 
 func (imageSearcher *ImageSearcher) SearchImage(query string) (string, error) {
+
+	qwantUrl := "https://api.qwant.com/api/search/images"
+	param := req.Param{
+		"count":      "1",
+		"t":          "images",
+		"uiv":        "4",
+		"safeSearch": "0",
+		"q":          query,
+	}
+
+	res, err := req.New().Get(qwantUrl, param)
+	if err != nil {
+		return "", err
+	}
+	var x QwantSearchResponse
+
+	res.ToJSON(&x)
+
+	if len(x.Data.Result.Items) < 1 {
+		return "", NoSearchResultError
+	}
+
+	return x.Data.Result.Items[0].Media, nil
+}
+
+func (imageSearcher *ImageSearcher) SearchImageContextualWeb(query string) (string, error) {
 	header := req.Header{
 		"X-RapidAPI-key": imageSearcher.Config.Key(),
 	}
@@ -102,4 +128,47 @@ type ImageSearchResponse struct {
 		ThumbnailWidth  int         `json:"thumbnailWidth"`
 		Base64Encoding  interface{} `json:"base64Encoding"`
 	} `json:"value"`
+}
+
+type QwantSearchResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		Query struct {
+			Locale string `json:"locale"`
+			Query  string `json:"query"`
+			Offset int    `json:"offset"`
+		} `json:"query"`
+		Cache struct {
+			Key        string `json:"key"`
+			Created    int    `json:"created"`
+			Expiration int    `json:"expiration"`
+			Status     string `json:"status"`
+			Age        int    `json:"age"`
+		} `json:"cache"`
+		Result struct {
+			Total int `json:"total"`
+			Items []struct {
+				Title         string `json:"title"`
+				Type          string `json:"type"`
+				Media         string `json:"media"`
+				Desc          string `json:"desc"`
+				Thumbnail     string `json:"thumbnail"`
+				ThumbWidth    int    `json:"thumb_width"`
+				ThumbHeight   int    `json:"thumb_height"`
+				Width         string `json:"width"`
+				Height        string `json:"height"`
+				Size          string `json:"size"`
+				URL           string `json:"url"`
+				ID            string `json:"_id"`
+				BID           string `json:"b_id"`
+				MediaFullsize string `json:"media_fullsize"`
+				ThumbType     string `json:"thumb_type"`
+				Count         int    `json:"count"`
+				MediaPreview  string `json:"media_preview"`
+			} `json:"items"`
+			Domain  string `json:"domain"`
+			Version string `json:"version"`
+			Last    bool   `json:"last"`
+		} `json:"result"`
+	} `json:"data"`
 }
